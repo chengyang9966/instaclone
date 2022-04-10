@@ -5,15 +5,26 @@ const {
   updateStatement,
   deleteStatement,
 } = require("../utils/statement");
+var crypto = require("crypto");
 
 class UersRepo {
   static async find() {
-    const { rows } = await pool.query("SELECT * FROM users");
+    const { rows } = await pool.query(
+      "SELECT * FROM users WHERE status='active'"
+    );
     let newRows = toCamelCasing(rows);
     return newRows;
   }
   static async findById(id) {
     const { rows } = await pool.query(`SELECT * FROM users WHERE id=$1;`, [id]);
+    let newRows = toCamelCasing(rows);
+    return newRows[0];
+  }
+  static async findBy(params) {
+    const { rows } = await pool.query(
+      `SELECT * FROM users WHERE ${Object.keys(params)[0]}=$1;`,
+      Object.values(params)
+    );
     let newRows = toCamelCasing(rows);
     return newRows[0];
   }
@@ -26,7 +37,6 @@ class UersRepo {
   }
   static async update(unique, params) {
     let text = updateStatement("users", params, unique);
-
     const { rows } = await pool.query(text, [
       ...Object.values(params),
       ...Object.values(unique),
