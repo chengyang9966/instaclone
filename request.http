@@ -1,0 +1,25 @@
+get http://localhost:8081/api/users
+
+###
+get http://localhost:8081/api/tester
+
+###
+PUT http://localhost:8081/api/users/8 HTTP/1.1
+content-type: application/json
+
+{
+    "username":"cookie123",
+    "bio":"I am Cookie",
+    "phone":"010-891232323",
+    "email":"yang826066@gmail.com",
+    "password":"xzxfere"
+}
+
+###
+POST http://localhost:8081/api/users HTTP/1.1
+Content-Type: application/json
+
+{
+    "name": "sample",
+    "time": "Wed, 21 Oct 2015 18:27:50 GMT"
+}
