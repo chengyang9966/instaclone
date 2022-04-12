@@ -11,12 +11,13 @@ const {
 
 const { userRoute } = require("./routes/users");
 const { testRoute } = require("./routes/test");
+const publicRouteController = require("./routes/publicRoute");
 
 app.use(cors());
 app.use(express.json());
 
 app.use("/api", addHeaderAuth, TokenVerified, userRoute, testRoute);
-
+app.use("/", express.urlencoded({ extended: false }), publicRouteController);
 app.get("/", addHeaderAuth, TokenVerified, async function (req, res) {
   res.send("<h5>qweqwe</h5>");
 });

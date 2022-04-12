@@ -21,6 +21,7 @@ const updateStatement = (table, params, unique) => {
       return `${w} = $${i + 1}`;
     })
     .join(", ")}`;
+  text += `, updated_at =$${paramsArr.length + 2}`;
   text += ` WHERE ${Object.keys(unique)[0]} = $${paramsArr.length + 1}`;
   text += ` RETURNING * ;`;
   return text;

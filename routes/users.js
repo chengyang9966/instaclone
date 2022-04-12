@@ -1,7 +1,10 @@
 const express = require("express");
 const UserRepo = require("../repos/users");
-const moment = require("moment");
-const { hashPassword, verifiedPassword } = require("../utils/password");
+const { hashPassword } = require("../utils/password");
+const { CreateToken } = require("../middleware/token");
+const sendEmail = require("../utils/sendEmail");
+var fs = require("fs");
+const path = require("path");
 const router = express.Router();
 
 router.get("/users", async function (req, res) {
@@ -15,7 +18,7 @@ router.get("/users/:id", async function (req, res) {
   if (user) {
     res.send(user);
   } else {
-    return res.sendStatus(404);
+    returnres.status(404);
   }
 });
 
@@ -31,33 +34,43 @@ router.post("/users", async function (req, res) {
   if (user) {
     res.send(user);
   } else {
-    res.sendStatus(404);
+    res.status(404);
   }
 });
-router.post("/login", async function (req, res) {
-  if (!req.body.password || !req.body.email) {
-    return res.status(404).send({ msg: "password is required" });
+
+router.post("/forgetpassword", async function (req, res) {
+  if (!req.body.email) {
+    return res.status(404).send({ msg: "email is required" });
   }
   let user = await UserRepo.findBy({ email: req.body.email });
-  const { id, password, salt } = user;
-  if (user) {
-    let newPassword = await verifiedPassword(req.body.password, password, salt);
-    if (newPassword) {
-      user = await UserRepo.update(
-        { id },
-        {
-          last_login: moment().format("YYYY-MM-DD HH:mm:ss"),
-        }
-      );
-      delete user.password;
-      delete user.salt;
-      delete user.lastLogin;
-      return res.send({ ...user, msg: "User login success", login: true });
-    }
-    return res.send({ msg: "User fail to login", login: false });
-  } else {
-    res.sendStatus(404);
+  if (!user) {
+    throw new Error("User does not exist");
   }
+
+  let resetToken = CreateToken({
+    email: user.email,
+    id: user.id,
+    username: user.username,
+  });
+
+  const link = `${process.env.CLIENT_URL}/passwordReset?token=${resetToken}&id=${user.id}`;
+
+  let newPath = path.resolve("template/resetPassword.html");
+  var resetPasswordHTML = await fs.readFileSync(newPath, { encoding: "utf8" });
+
+  resetPasswordHTML = resetPasswordHTML.replace("javascript:void(0);", link);
+  let result = await sendEmail({
+    to: user.email,
+    subject: "Reset Pasword",
+    html: resetPasswordHTML,
+  });
+  if (!result || result.status === "failed")
+    return res.status(404).send({ msg: "Fail to send Email" });
+
+  return res.send({
+    data: result,
+    msg: `Send Email to ${username} successfully`,
+  });
 });
 
 router.put("/users/:id", async function (req, res) {
@@ -72,7 +85,7 @@ router.put("/users/:id", async function (req, res) {
   if (user) {
     res.send(user);
   } else {
-    return res.sendStatus(404);
+    returnres.status(404);
   }
 });
 
@@ -81,7 +94,7 @@ router.delete("/users/:id", async function (req, res) {
   if (user) {
     res.send(user);
   } else {
-    return res.sendStatus(404);
+    returnres.status(404);
   }
 });
 

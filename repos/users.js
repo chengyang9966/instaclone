@@ -5,7 +5,7 @@ const {
   updateStatement,
   deleteStatement,
 } = require("../utils/statement");
-var crypto = require("crypto");
+const moment = require("moment");
 
 class UersRepo {
   static async find() {
@@ -40,6 +40,7 @@ class UersRepo {
     const { rows } = await pool.query(text, [
       ...Object.values(params),
       ...Object.values(unique),
+      moment().format(process.env.TIMESTAP_FORMAT),
     ]);
 
     return toCamelCasing(rows)[0];
