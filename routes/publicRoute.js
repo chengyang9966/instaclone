@@ -81,7 +81,6 @@ router.post("/createUser", async function (req, res) {
   }
 });
 
-router.get("roles", async function (req, res) {});
 router.get("/userForgetPassword", async function (req, res) {
   let emailText = "";
   if (Object.keys(req.query).length) {
@@ -213,7 +212,6 @@ router.get("/userVerified", async function (req, res) {
       return res.status(404).send({ msg: "invalid query" });
 
     let user = await UserRepo.findById(id);
-    console.log("🚀 ~ file: publicRoute.js ~ line 217 ~ user", user);
 
     if (!user) {
       return res.status(404).send({ msg: "invalid User" });
