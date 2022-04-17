@@ -38,7 +38,7 @@ router.post("/users", async function (req, res) {
     username: user.username,
   });
 
-  const link = `${process.env.CLIENT_URL}/userVerified?token=${createUserToken}&id=${user.id}`;
+  const link = `${process.env.CLIENT_URL}:${process.env.PORT}/userVerified?token=${createUserToken}&id=${user.id}`;
 
   let newPath = path.resolve("template/createUser.html");
   var createUserHTML = fs.readFileSync(newPath, { encoding: "utf8" });
@@ -74,7 +74,7 @@ router.post("/forgetpassword", async function (req, res) {
     username: user.username,
   });
 
-  const link = `${process.env.CLIENT_URL}/passwordReset?token=${resetToken}&id=${user.id}`;
+  const link = `${process.env.CLIENT_URL}:${process.env.PORT}/passwordReset?token=${resetToken}&id=${user.id}`;
 
   let newPath = path.resolve("template/resetPassword.html");
   var resetPasswordHTML = await fs.readFileSync(newPath, { encoding: "utf8" });

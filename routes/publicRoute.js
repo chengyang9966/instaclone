@@ -60,7 +60,7 @@ router.post("/createUser", async function (req, res) {
       username: user.username,
     });
 
-    const link = `${process.env.CLIENT_URL}/userVerified?token=${createUserToken}&id=${user.id}`,
+    const link = `${process.env.CLIENT_URL}:${process.env.PORT}/userVerified?token=${createUserToken}&id=${user.id}`,
       createUserHTML = tenplateString("template/createUser.html")
         .replace(/{{url}}/g, link)
         .replace("{{username}}", user.username);
@@ -220,7 +220,7 @@ router.get("/userVerified", async function (req, res) {
       .replace("{{username}}", user.username)
       .replace(
         "{{url}}",
-        `${process.env.CLIENT_URL}/${process.env.LOGIN_VIEW_PATH}`
+        `${process.env.CLIENT_URL}:${process.env.PORT}/${process.env.LOGIN_VIEW_PATH}`
       )
       .replace("{{email}}", user.email)
       .replace("{{DEFAULT_PASSWORD}}", process.env.DEFAULT_PASSWORD);

@@ -3,7 +3,7 @@ const fs = require("fs");
 
 const tenplateString = (newPATH) => {
   let pathString = process.env.FOLDER_PATH
-    ? process.env.FOLDER_PATH + newPATH
+    ? `${process.env.FOLDER_PATH}/${newPATH}`
     : newPATH;
   let newPath = path.resolve(pathString);
   var verifiedUserHTML = fs.readFileSync(newPath, {
