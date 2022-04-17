@@ -2,12 +2,14 @@ const express = require("express");
 const { VerifyToken, CreateToken } = require("../middleware/token");
 const UserRepo = require("../repos/users");
 const router = express.Router();
-const path = require("path");
-const fs = require("fs");
+
 const { TokenVerified } = require("../middleware/middlewareToken");
 const { hashPassword, verifiedPassword } = require("../utils/password");
 const moment = require("moment");
 const sendEmail = require("../utils/sendEmail");
+const tenplateString = require("../utils/returnTemplateString");
+const getAllData = require("../utils/templateDataForUser");
+const RoleRepo = require("../repos/roles");
 
 router.post("/login", async function (req, res) {
   try {
@@ -41,6 +43,98 @@ router.post("/login", async function (req, res) {
   }
 });
 
+router.post("/createUser", async function (req, res) {
+  try {
+    if (req.body.password) {
+      let newPassword = await hashPassword(req.body.password);
+      req.body.password = newPassword.hashPassword;
+      req.body.salt = newPassword.salt;
+    }
+    const user = await UserRepo.insert({ ...req.body, status: "pending" });
+
+    if (!user) return res.status(404).send({ msg: "Fail to create User" });
+
+    let createUserToken = CreateToken({
+      email: user.email,
+      id: user.id,
+      username: user.username,
+    });
+
+    const link = `${process.env.CLIENT_URL}/userVerified?token=${createUserToken}&id=${user.id}`,
+      createUserHTML = tenplateString("template/createUser.html")
+        .replace(/{{url}}/g, link)
+        .replace("{{username}}", user.username);
+
+    let result = await sendEmail({
+      to: user.email,
+      subject: "Verified User",
+      html: createUserHTML,
+    });
+
+    if (!result || result.status === "failed")
+      return res.status(404).send({ msg: "Fail to send Email" });
+
+    return res.send({ ...user, msg: "Create User successfully" });
+  } catch (error) {
+    console.log("🚀 ~ file: publicRoute.js ~ line 81 ~ error", error);
+    return res.status(404).send({ ...error, msg: "Fail to send Email" });
+  }
+});
+
+router.get("roles", async function (req, res) {});
+router.get("/userForgetPassword", async function (req, res) {
+  let emailText = "";
+  if (Object.keys(req.query).length) {
+    emailText = req.query ? req.query.email : "";
+  }
+  let loginHTML = getAllData("forget_password", {
+    email: emailText,
+    templateURL: "template/userLogin.html",
+  });
+
+  res.writeHead(200, {
+    "Content-Type": "text/html",
+  });
+  res.write(loginHTML);
+  return res.end();
+});
+router.get("/userLogin", async function (req, res) {
+  let emailText = "";
+  if (Object.keys(req.query).length) {
+    emailText = req.query ? req.query.email : req.params ? req.params : "";
+  }
+  let loginHTML = getAllData("login", {
+    email: emailText,
+    templateURL: "template/userLogin.html",
+  });
+
+  res.writeHead(200, {
+    "Content-Type": "text/html",
+  });
+  res.write(loginHTML);
+  return res.end();
+});
+
+router.get("/userRegister", async function (req, res) {
+  let emailText = "";
+  if (Object.keys(req.query).length) {
+    emailText = req.query ? req.query.email : "";
+  }
+  let allRoles = await RoleRepo.find();
+
+  let loginHTML = getAllData("register", {
+    email: emailText,
+    templateURL: "template/userLogin.html",
+    roles: [...allRoles, { id: 2, roleName: "abcd" }],
+  });
+
+  res.writeHead(200, {
+    "Content-Type": "text/html",
+  });
+  res.write(loginHTML);
+  return res.end();
+});
+
 router.get("/passwordReset", async function (req, res) {
   try {
     const { token, id } = req.query;
@@ -55,12 +149,9 @@ router.get("/passwordReset", async function (req, res) {
     if (!user) {
       return res.status(404).send({ msg: "invalid User" });
     }
-    let html = await fs.readFileSync(
-      path.resolve("template/insertPassword.html"),
-      { encoding: "utf8" }
-    );
+
     let newToken = CreateToken({ id, username: user.username });
-    html = html
+    html = tenplateString("template/insertPassword.html")
       .replace("{{username}}", user.username)
       .replace("<Authorization>", `Basic ${newToken}`);
 
@@ -94,14 +185,10 @@ router.post("/passwordReset", TokenVerified, async function (req, res) {
     if (!userUpdate) {
       return res.status(404).send({ msg: "Update Failed" });
     }
-    let newPath = path.resolve("template/resetPasswordSuccess.html");
-    var resetPasswordSuccessHTML = await fs.readFileSync(newPath, {
-      encoding: "utf8",
-    });
-    resetPasswordSuccessHTML = resetPasswordSuccessHTML.replace(
-      "{{username}}",
-      user.username
-    );
+
+    resetPasswordSuccessHTML = tenplateString(
+      "template/resetPasswordSuccess.html"
+    ).replace("{{username}}", user.username);
 
     let result = await sendEmail({
       to: user.email,
@@ -118,4 +205,62 @@ router.post("/passwordReset", TokenVerified, async function (req, res) {
     return res.status(404).send({ ...error, msg: "Update Failed" });
   }
 });
+
+router.get("/userVerified", async function (req, res) {
+  try {
+    const { token, id } = req.query;
+    if (!token || !id || id === "undefined")
+      return res.status(404).send({ msg: "invalid query" });
+
+    let user = await UserRepo.findById(id);
+    console.log("🚀 ~ file: publicRoute.js ~ line 217 ~ user", user);
+
+    if (!user) {
+      return res.status(404).send({ msg: "invalid User" });
+    }
+    verifiedUserHTML = tenplateString("template/verifiedUser.html")
+      .replace("{{username}}", user.username)
+      .replace(
+        "{{url}}",
+        `${process.env.CLIENT_URL}/${process.env.LOGIN_VIEW_PATH}`
+      )
+      .replace("{{email}}", user.email)
+      .replace("{{DEFAULT_PASSWORD}}", process.env.DEFAULT_PASSWORD);
+
+    if (user.status === "active") {
+      res.writeHead(200, {
+        "Content-Type": "text/html",
+      });
+      res.write(verifiedUserHTML);
+      return res.end();
+    }
+
+    let isVerifedToken = VerifyToken(token);
+
+    if (!isVerifedToken || isVerifedToken.valid === false)
+      return res.status(404).send({ msg: "invalid Token" });
+
+    let body = { status: "active" };
+
+    let userUpdate = await UserRepo.update({ id }, body);
+
+    if (!userUpdate) {
+      return res.status(404).send({ msg: "Update Failed" });
+    }
+
+    // let result = await sendEmail({
+    //   to: user.email,
+    //   subject: "Reset Pasword Successfully",
+    //   html: resetPasswordSuccessHTML,
+    // });
+    res.writeHead(200, {
+      "Content-Type": "text/html",
+    });
+    res.write(verifiedUserHTML);
+    return res.end();
+  } catch (error) {
+    return res.status(404).send({ ...error, msg: "Update Failed" });
+  }
+});
+
 module.exports = router;

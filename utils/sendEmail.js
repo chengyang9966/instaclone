@@ -13,6 +13,14 @@ let transporter = nodemailer.createTransport({
 });
 
 const sendEmail = async (value) => {
+  await transporter.verify(function (error, success) {
+    if (error) {
+      console.log(error);
+    } else {
+      console.log("Server is ready to take our messages");
+    }
+  });
+
   let defaultOption = {
     from: "no_replyInstaClone@protonmail.com", // sender address
     to: "bar@example.com, baz@example.com", // list of receivers

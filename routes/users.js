@@ -23,19 +23,40 @@ router.get("/users/:id", async function (req, res) {
 });
 
 router.post("/users", async function (req, res) {
-  if (!req.body.password) {
-    return res.status(404).send({ msg: "password is required" });
+  if (req.body.password) {
+    let newPassword = await hashPassword(req.body.password);
+    req.body.password = newPassword.hashPassword;
+    req.body.salt = newPassword.salt;
   }
+  const user = await UserRepo.insert({ ...req.body, status: "pending" });
 
-  let newPassword = await hashPassword(req.body.password);
-  req.body.password = newPassword.hashPassword;
-  req.body.salt = newPassword.salt;
-  const user = await UserRepo.insert(req.body);
-  if (user) {
-    res.send(user);
-  } else {
-    res.status(404);
-  }
+  if (!user) return res.status(404).send({ msg: "Fail to create User" });
+
+  let createUserToken = CreateToken({
+    email: user.email,
+    id: user.id,
+    username: user.username,
+  });
+
+  const link = `${process.env.CLIENT_URL}/userVerified?token=${createUserToken}&id=${user.id}`;
+
+  let newPath = path.resolve("template/createUser.html");
+  var createUserHTML = fs.readFileSync(newPath, { encoding: "utf8" });
+  createUserHTML = createUserHTML
+    .replace(/{{url}}/g, link)
+    .replace("{{username}}", user.username);
+
+  let result = await sendEmail({
+    to: user.email,
+    subject: "Verified User",
+    html: createUserHTML,
+  });
+
+  console.log("🚀 ~ file: users.js ~ line 57 ~ result", result);
+  if (!result || result.status === "failed")
+    return res.status(404).send({ msg: "Fail to send Email" });
+
+  return res.send({ ...user, msg: "Create User successfully" });
 });
 
 router.post("/forgetpassword", async function (req, res) {

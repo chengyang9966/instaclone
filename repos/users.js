@@ -46,7 +46,7 @@ class UersRepo {
     return toCamelCasing(rows)[0];
   }
   static async delete(params) {
-    let text = deleteStatement("users", params);
+    let text = updateStatement("users", { status: "" }, params);
 
     const { rows } = await pool.query(text, Object.values(params));
 

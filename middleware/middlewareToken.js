@@ -7,7 +7,7 @@ const TokenVerified = (req, res, next) => {
       ? req.body.Authorization.split(" ")[1]
       : null;
   } else {
-    token == req.headers.Authorization
+    token = req.headers.Authorization
       ? req.headers.Authorization.split(" ")[1]
       : null;
   }

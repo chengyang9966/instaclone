@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>User Login Form</title>
+    <link href="https://fonts.googleapis.com/css?family=Rubik:400,700" />
+    <script
+      src="https://code.jquery.com/jquery-3.3.1.js"
+      integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+      crossorigin="anonymous"
+    ></script>
+    <link
+      href="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/css/bootstrap.min.css"
+      rel="stylesheet"
+      id="bootstrap-css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.13.0/css/all.min.css"
+    />
+    <script src="//maxcdn.bootstrapcdn.com/bootstrap/4.1.1/js/bootstrap.min.js"></script>
+
+    <style>
+      .pass_show {
+        position: relative;
+      }
+
+      .pass_show #togglePassword {
+        position: absolute;
+        top: 50%;
+        right: 10px;
+        z-index: 1;
+        color: #ff7300dc;
+        margin-top: -10px;
+        cursor: pointer;
+        transition: 0.3s ease all;
+      }
+
+      .pass_show #togglePassword:hover {
+        color: #333333;
+      }
+      body {
+        background: #e35869;
+      }
+      .form-control {
+        border-top: 0px;
+        border-right: 0px;
+        border-left: 0px;
+        padding: 0.375rem 0px;
+      }
+
+      .form-control:focus {
+        box-shadow: 0 0 0 0.15rem #ced4da;
+        border-bottom: #ced4da;
+      }
+
+      .container {
+        background-color: white;
+        border-radius: 4px;
+      }
+      .mt-8 {
+        margin-top: 4.5rem;
+      }
+      .btn {
+        text-transform: uppercase;
+      }
+      .btn.btn-dark {
+        background: #2d3b55;
+        border-color: #2d3b55;
+        color: #fff;
+        border-radius: 0px;
+        border-bottom-right-radius: 4px;
+      }
+      .btn.btn-dark:hover {
+        background: #3c4d6d;
+      }
+      .btn.btn-light {
+        background: #e8e9ec;
+        border-color: #e8e9ec;
+        color: #777;
+        border-radius: 0px;
+        border-bottom-left-radius: 4px;
+      }
+      .btn.btn-light:hover {
+        background: #d8d8d8;
+      }
+      .link {
+        letter-spacing: 0.2px;
+        text-transform: uppercase;
+      }
+      #title {
+        text-transform: uppercase;
+      }
+      #roles {
+        width: 100%;
+      }
+    </style>
+    <script>
+      $(document).ready(function () {
+        $(".pass_show").append(
+          '<i class="far fa-eye" style="cursor: pointer" id="togglePassword"></i>'
+        );
+      });
+
+      $(document).on("click", ".pass_show #togglePassword", function () {
+        $(this)
+          .prev()
+          .attr("type", function (index, attr) {
+            return attr == "password" ? "text" : "password";
+          });
+
+        $(this).attr("class", function (index, attr) {
+          return attr == "far fa-eye" ? "far fa-eye-slash" : "far fa-eye";
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <!-- <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      body {
+        background: #e35869;
+        font-family: "Rubik", sans-serif;
+      }
+
+      .login-form {
+        background: #fff;
+        width: 500px;
+        margin: 65px auto;
+        display: -webkit-box;
+        display: flex;
+        -webkit-box-orient: vertical;
+        -webkit-box-direction: normal;
+        flex-direction: column;
+        border-radius: 4px;
+        box-shadow: 0 2px 25px rgba(0, 0, 0, 0.2);
+      }
+      .login-form h1 {
+        padding: 35px 35px 0 35px;
+        font-weight: 300;
+      }
+      .login-form .content {
+        padding: 35px;
+        text-align: center;
+      }
+      .login-form .input-field {
+        padding: 12px 5px;
+      }
+      .login-form .input-field input {
+        font-size: 16px;
+        display: block;
+        font-family: "Rubik", sans-serif;
+        width: 100%;
+        padding: 10px 1px;
+        border: 0;
+        border-bottom: 1px solid #747474;
+        outline: none;
+        -webkit-transition: all 0.2s;
+        transition: all 0.2s;
+      }
+      .login-form .input-field input::-webkit-input-placeholder {
+        text-transform: uppercase;
+      }
+      .login-form .input-field input::-moz-placeholder {
+        text-transform: uppercase;
+      }
+      .login-form .input-field input:-ms-input-placeholder {
+        text-transform: uppercase;
+      }
+      .login-form .input-field input::-ms-input-placeholder {
+        text-transform: uppercase;
+      }
+      .login-form .input-field input::placeholder {
+        text-transform: uppercase;
+      }
+      .login-form .input-field input:focus {
+        border-color: #222;
+      }
+      .login-form a.link {
+        text-decoration: none;
+        color: #747474;
+        letter-spacing: 0.2px;
+        text-transform: uppercase;
+        display: inline-block;
+        margin-top: 20px;
+      }
+      .login-form .action {
+        display: -webkit-box;
+        display: flex;
+        -webkit-box-orient: horizontal;
+        -webkit-box-direction: normal;
+        flex-direction: row;
+      }
+      .login-form .action button {
+        width: 100%;
+        border: none;
+        padding: 18px;
+        font-family: "Rubik", sans-serif;
+        cursor: pointer;
+        text-transform: uppercase;
+        background: #e8e9ec;
+        color: #777;
+        border-bottom-left-radius: 4px;
+        border-bottom-right-radius: 0;
+        letter-spacing: 0.2px;
+        outline: 0;
+        -webkit-transition: all 0.3s;
+        transition: all 0.3s;
+      }
+      .login-form .action button:hover {
+        background: #d8d8d8;
+      }
+      .login-form .action button:nth-child(2) {
+        background: #2d3b55;
+        color: #fff;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 4px;
+      }
+      .login-form .action button:nth-child(2):hover {
+        background: #3c4d6d;
+      }
+    </style> -->
+    <!-- partial:index.partial.html -->
+    <div class="container mt-8">
+      <div class="row justify-content-center pt-3">
+        <h1 id="title">{{title}}</h1>
+      </div>
+      <form id="userForm" class="row" method="post" action="{{formAction}}">
+        <div class="col-12 my-3">
+          <div class="form-group {{username}}">
+            <input
+              required
+              id="username"
+              name="username"
+              type="username"
+              class="form-control"
+              placeholder="username"
+              autocomplete="nope"
+            />
+          </div>
+          <div
+            class="alert alert-danger d-none"
+            role="alert"
+            id="emptyusername"
+          >
+            Please enter username.
+          </div>
+          <div class="form-group">
+            <input
+              name="email"
+              id="email"
+              type="email"
+              class="form-control"
+              placeholder="Email"
+              autocomplete="nope"
+              value="{{email}}"
+            />
+          </div>
+          <div class="alert alert-danger d-none" role="alert" id="emptyemail">
+            Please enter email.
+          </div>
+          <div class="form-group pass_show {{password}}">
+            <input
+              required
+              id="password"
+              name="password"
+              type="password"
+              class="form-control"
+              autocomplete="new-password"
+              placeholder="New Password"
+            />
+          </div>
+          <div
+            class="alert alert-danger d-none"
+            role="alert"
+            id="emptypassword"
+          >
+            Please enter password.
+          </div>
+          <div class="row justify-content-center my-3">
+            <a
+              href="{{forgetPassword}}"
+              style="text-decoration: none"
+              class="link {{forgetPasswordShow}} text-secondary text"
+              >Forgot Your Password?</a
+            >
+          </div>
+          <div class="form-group {{showRole}}">
+            <select name="role_id" id="roles" class="form-control">
+              {{roles}}
+            </select>
+          </div>
+        </div>
+
+        <input
+          type="hidden"
+          id="btn_1_input"
+          name="btn_1_link"
+          value="{{btnLeftLink}}"
+        />
+        <div class="col-12">
+          <div class="row">
+            <div class="col-6 px-0">
+              <button
+                class="btn btn-light w-100"
+                formaction="{{btnLeftLink}}"
+                id="btn_1"
+                formmethod="get"
+              >
+                {{btnLeft}}
+              </button>
+            </div>
+            <div class="col-6 px-0">
+              <button
+                class="btn btn-dark w-100"
+                formaction="{{btnRightLink}}"
+                id="btn_2"
+              >
+                {{btnRight}}
+              </button>
+            </div>
+          </div>
+        </div>
+      </form>
+    </div>
+    <!-- partial -->
+    <script type="text/javascript">
+      $("#btn_1").on("click", function (e) {
+        e.preventDefault();
+        let url = $("#btn_1_input").attr("value");
+        let url_obj = url.split("?");
+        console.log("🚀 bj", url_obj);
+        let data = $("#userForm").serializeArray();
+        data = data.filter(
+          ({ name, value }) =>
+            name != "password" && value !== "" && name !== "btn_1_link"
+        );
+        let result = data
+          .map(({ name, value }) => `${name}=${value}`)
+          .join("&");
+
+        url = `${url_obj[0]}?${result}`;
+
+        console.log({
+          action: url,
+          result,
+        });
+
+        $.ajax({
+          url: url,
+          type: "get",
+          data: result,
+          success: function (response) {
+            location.href = url;
+            // alert(response);
+          },
+        });
+      });
+
+      $("#btn_2").on("click", function (e) {
+        e.preventDefault();
+        let pagetype = $("#title").text().toLowerCase();
+        $("#btn_1_input").remove();
+        pagetype === "register" && $("#password").remove();
+        pagetype === "login" && $("#username").remove();
+        let data = $("#userForm").serializeArray();
+
+        console.log("🚀 ~ file: userLogin.html ~ line 314 ~ $ ~ data", {
+          data,
+          pagetype,
+        });
+        let result = true;
+        data.map(({ name, value }) => {
+          if (!value) {
+            $(`#empty${name}`).removeClass("d-none");
+            setTimeout(function () {
+              $(`#empty${name}`).addClass("d-none");
+            }, 5000);
+            result = false;
+          }
+        });
+
+        result && $("#userForm").submit();
+      });
+    </script>
+  </body>
+</html>
