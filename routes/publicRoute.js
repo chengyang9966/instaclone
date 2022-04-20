@@ -54,11 +54,14 @@ router.post("/createUser", async function (req, res) {
 
     if (!user) return res.status(404).send({ msg: "Fail to create User" });
 
-    let createUserToken = CreateToken({
-      email: user.email,
-      id: user.id,
-      username: user.username,
-    });
+    let createUserToken = CreateToken(
+      {
+        email: user.email,
+        id: user.id,
+        username: user.username,
+      },
+      process.env.DEFAULT_PASSWORD
+    );
 
     const link = `${process.env.CLIENT_URL}:${process.env.PORT}/userVerified?token=${createUserToken}&id=${user.id}`,
       createUserHTML = templateString("template/createUser.html")
@@ -140,14 +143,12 @@ router.get("/passwordReset", async function (req, res) {
     if (!token || !id || id === "undefined")
       return res.status(404).send({ msg: "invalid query" });
 
-    // let isVerifedToken = VerifyToken(token);
-    // if (!isVerifedToken || isVerifedToken.valid === false)
-    //   return res.status(404).send({ msg: "invalid Token" });
-
     let user = await UserRepo.findById(id);
-    if (!user) {
-      return res.status(404).send({ msg: "invalid User" });
-    }
+    if (!user) return res.status(404).send({ msg: "invalid User" });
+
+    let isVerifedToken = VerifyToken(token, user.password);
+    if (!isVerifedToken || isVerifedToken.valid === false)
+      return res.status(404).send({ msg: "Link is expired" });
 
     let newToken = CreateToken({ id, username: user.username });
     html = templateString("template/insertPassword.html")
@@ -169,6 +170,7 @@ router.post("/passwordReset", TokenVerified, async function (req, res) {
       return res.status(404).send({ msg: "Param is required " });
     }
     let user = await UserRepo.findById(id);
+    console.log("🚀 ~ file: publicRoute.js ~ line 173 ~ user", user);
     if (!user) {
       return res.status(404).send({ msg: "invalid User" });
     }
@@ -184,10 +186,16 @@ router.post("/passwordReset", TokenVerified, async function (req, res) {
     if (!userUpdate) {
       return res.status(404).send({ msg: "Update Failed" });
     }
-
+    let newURL =
+      `${process.env.CLIENT_URL}:${process.env.PORT}/${process.env.LOGIN_VIEW_PATH}`.replace(
+        "{{email}}",
+        user.email ? user.email : ""
+      );
     resetPasswordSuccessHTML = templateString(
       "template/resetPasswordSuccess.html"
-    ).replace("{{username}}", user.username);
+    )
+      .replace("{{username}}", user.username)
+      .replace("{{urlLogin}}", newURL);
 
     let result = await sendEmail({
       to: user.email,
@@ -205,17 +213,35 @@ router.post("/passwordReset", TokenVerified, async function (req, res) {
   }
 });
 
-router.get("/userVerified", async function (req, res) {
+router.get("/userVerified", TokenVerified, async function (req, res) {
   try {
     const { token, id } = req.query;
     if (!token || !id || id === "undefined")
       return res.status(404).send({ msg: "invalid query" });
 
     let user = await UserRepo.findById(id);
+    console.log("🚀 ~ file: publicRoute.js ~ line 216 ~ user", user);
 
     if (!user) {
       return res.status(404).send({ msg: "invalid User" });
     }
+
+    if (user.status === "active") {
+      let newURL =
+        `${process.env.CLIENT_URL}:${process.env.PORT}/${process.env.LOGIN_VIEW_PATH}`.replace(
+          "{{email}}",
+          user.email ? user.email : ""
+        );
+      res.redirect(newURL);
+      return res.end();
+    }
+    let body = { status: "active" };
+
+    let userUpdate = await UserRepo.update({ id }, body);
+    if (!userUpdate) {
+      return res.status(404).send({ msg: "Update Failed" });
+    }
+
     verifiedUserHTML = templateString("template/verifiedUser.html")
       .replace("{{username}}", user.username)
       .replace(
@@ -225,32 +251,6 @@ router.get("/userVerified", async function (req, res) {
       .replace("{{email}}", user.email)
       .replace("{{DEFAULT_PASSWORD}}", process.env.DEFAULT_PASSWORD);
 
-    if (user.status === "active") {
-      res.writeHead(200, {
-        "Content-Type": "text/html",
-      });
-      res.write(verifiedUserHTML);
-      return res.end();
-    }
-
-    let isVerifedToken = VerifyToken(token);
-
-    if (!isVerifedToken || isVerifedToken.valid === false)
-      return res.status(404).send({ msg: "invalid Token" });
-
-    let body = { status: "active" };
-
-    let userUpdate = await UserRepo.update({ id }, body);
-
-    if (!userUpdate) {
-      return res.status(404).send({ msg: "Update Failed" });
-    }
-
-    // let result = await sendEmail({
-    //   to: user.email,
-    //   subject: "Reset Pasword Successfully",
-    //   html: resetPasswordSuccessHTML,
-    // });
     res.writeHead(200, {
       "Content-Type": "text/html",
     });
@@ -259,6 +259,44 @@ router.get("/userVerified", async function (req, res) {
   } catch (error) {
     return res.status(404).send({ ...error, msg: "Update Failed" });
   }
+});
+
+router.post("/forgetpassword", async function (req, res) {
+  if (!req.body.email) {
+    return res.status(404).send({ msg: "email is required" });
+  }
+  let user = await UserRepo.findBy({ email: req.body.email });
+  if (!user) {
+    throw new Error("User does not exist");
+  }
+
+  let resetToken = CreateToken(
+    {
+      email: user.email,
+      id: user.id,
+      username: user.username,
+    },
+    user.password
+  );
+
+  const link = `${process.env.CLIENT_URL}:${process.env.PORT}/passwordReset?token=${resetToken}&id=${user.id}`;
+
+  resetPasswordHTML = templateString("template/resetPassword.html").replace(
+    "javascript:void(0);",
+    link
+  );
+  let result = await sendEmail({
+    to: user.email,
+    subject: "Reset Pasword",
+    html: resetPasswordHTML,
+  });
+  if (!result || result.status === "failed")
+    return res.status(404).send({ msg: "Fail to send Email" });
+
+  return res.send({
+    data: result,
+    msg: `Send Email to ${user.username} successfully`,
+  });
 });
 
 module.exports = router;

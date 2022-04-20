@@ -1,11 +1,15 @@
 const { VerifyToken, CreateToken } = require("./token");
 
 const TokenVerified = (req, res, next) => {
-  var token = null;
+  var token = null,
+    customKEY = null;
   if (req.headers["content-type"] === "application/x-www-form-urlencoded") {
-    var token = req.body.Authorization
+    token = req.body.Authorization
       ? req.body.Authorization.split(" ")[1]
       : null;
+  } else if (req.query && req.query["token"]) {
+    token = req.query["token"];
+    customKEY = process.env.DEFAULT_PASSWORD;
   } else {
     token = req.headers.authorization
       ? req.headers.authorization.split(" ")[1]
@@ -19,8 +23,8 @@ const TokenVerified = (req, res, next) => {
   if (!token) {
     return res.status(401).send({ message: "Unauthorize user" });
   }
-
-  let verify = VerifyToken(token);
+  let verify = VerifyToken(token, customKEY);
+  console.log("🚀 ~ file: ~ verify", verify);
 
   if (!verify.valid) {
     return res.status(401).send({ message: "Invalid Token" });

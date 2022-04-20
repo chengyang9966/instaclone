@@ -35,10 +35,11 @@ const getAllData = (param, { email, templateURL, roles } = templateData) => {
     login_url = `${process.env.CLIENT_URL}:${process.env.PORT}/${process.env.LOGIN_PATH}`,
     register_url = `${process.env.CLIENT_URL}:${process.env.PORT}/${process.env.REGISTER_PATH}`,
     foget_password_view_url =
-      `${process.env.CLIENT_URL}:${process.env.PORT}/${process.env.FORGET_PASSWORD_PATH}`.replace(
+      `${process.env.CLIENT_URL}:${process.env.PORT}/${process.env.FORGET_PASSWORD_VIEW_PATH}`.replace(
         "{{email}}",
         email ? email : ""
-      );
+      ),
+    forget_password_url = `${process.env.CLIENT_URL}:${process.env.PORT}/${process.env.FORGET_PASSWORD_PATH}`;
   let roles_in_html = roles
     ? roles
         .map((w) => `<option value="${w.id}">${w.roleName}</option>`)
@@ -76,14 +77,14 @@ const getAllData = (param, { email, templateURL, roles } = templateData) => {
 
     case "forget_password":
       allData = Object.assign(allData, {
-        "{{formAction}}": foget_password_view_url,
+        "{{formAction}}": forget_password_url,
         "{{title}}": "Reset Password",
         "{{forgetPasswordShow}}": "d-none",
         "{{username}}": "d-none",
         "{{forgetPassword}}": foget_password_view_url,
         "{{btnLeftLink}}": login_view_url,
         "{{btnLeft}}": "login",
-        "{{btnRightLink}}": foget_password_view_url,
+        "{{btnRightLink}}": forget_password_url,
         "{{btnRight}}": "submit",
       });
       break;

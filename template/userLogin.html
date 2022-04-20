@@ -273,7 +273,7 @@
               type="password"
               class="form-control"
               autocomplete="new-password"
-              placeholder="New Password"
+              placeholder="Password"
             />
           </div>
           <div
@@ -283,11 +283,11 @@
           >
             Please enter password.
           </div>
-          <div class="row justify-content-center my-3">
+          <div class="row justify-content-center my-3 {{forgetPasswordShow}}">
             <a
               href="{{forgetPassword}}"
               style="text-decoration: none"
-              class="link {{forgetPasswordShow}} text-secondary text"
+              class="link text-secondary text"
               >Forgot Your Password?</a
             >
           </div>
@@ -366,9 +366,11 @@
       $("#btn_2").on("click", function (e) {
         e.preventDefault();
         let pagetype = $("#title").text().toLowerCase();
+        console.log("🚀 ~ file: userLogin.html ~ line 369 ~ pagetype", pagetype)
         $("#btn_1_input").remove();
         pagetype === "register" && $("#password").remove();
         pagetype === "login" && $("#username").remove();
+        pagetype === "reset password" && $("#username").remove()&& $("#password").remove() ;
         let data = $("#userForm").serializeArray();
 
         console.log("🚀 ~ file: userLogin.html ~ line 314 ~ $ ~ data", {
