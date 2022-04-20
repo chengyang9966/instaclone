@@ -1,7 +1,7 @@
 const path = require("path");
 const fs = require("fs");
 
-const tenplateString = (newPATH) => {
+const templateString = (newPATH) => {
   let pathString = process.env.FOLDER_PATH
     ? `${process.env.FOLDER_PATH}/${newPATH}`
     : newPATH;
@@ -12,5 +12,11 @@ const tenplateString = (newPATH) => {
 
   return verifiedUserHTML;
 };
+const newPath = (newPATH) => {
+  let pathString = process.env.FOLDER_PATH
+    ? `${process.env.FOLDER_PATH}/${newPATH}`
+    : newPATH;
+  return path.resolve(pathString);
+};
 
-module.exports = tenplateString;
+module.exports = { templateString, newPath };

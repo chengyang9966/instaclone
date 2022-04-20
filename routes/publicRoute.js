@@ -7,7 +7,7 @@ const { TokenVerified } = require("../middleware/middlewareToken");
 const { hashPassword, verifiedPassword } = require("../utils/password");
 const moment = require("moment");
 const sendEmail = require("../utils/sendEmail");
-const tenplateString = require("../utils/returnTemplateString");
+const { templateString } = require("../utils/returnTemplateString");
 const getAllData = require("../utils/templateDataForUser");
 const RoleRepo = require("../repos/roles");
 
@@ -61,7 +61,7 @@ router.post("/createUser", async function (req, res) {
     });
 
     const link = `${process.env.CLIENT_URL}:${process.env.PORT}/userVerified?token=${createUserToken}&id=${user.id}`,
-      createUserHTML = tenplateString("template/createUser.html")
+      createUserHTML = templateString("template/createUser.html")
         .replace(/{{url}}/g, link)
         .replace("{{username}}", user.username);
 
@@ -150,7 +150,7 @@ router.get("/passwordReset", async function (req, res) {
     }
 
     let newToken = CreateToken({ id, username: user.username });
-    html = tenplateString("template/insertPassword.html")
+    html = templateString("template/insertPassword.html")
       .replace("{{username}}", user.username)
       .replace("<Authorization>", `Basic ${newToken}`);
 
@@ -185,7 +185,7 @@ router.post("/passwordReset", TokenVerified, async function (req, res) {
       return res.status(404).send({ msg: "Update Failed" });
     }
 
-    resetPasswordSuccessHTML = tenplateString(
+    resetPasswordSuccessHTML = templateString(
       "template/resetPasswordSuccess.html"
     ).replace("{{username}}", user.username);
 
@@ -216,7 +216,7 @@ router.get("/userVerified", async function (req, res) {
     if (!user) {
       return res.status(404).send({ msg: "invalid User" });
     }
-    verifiedUserHTML = tenplateString("template/verifiedUser.html")
+    verifiedUserHTML = templateString("template/verifiedUser.html")
       .replace("{{username}}", user.username)
       .replace(
         "{{url}}",

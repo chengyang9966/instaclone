@@ -1,6 +1,7 @@
 var express = require("express");
 const cors = require("cors");
 require("dotenv").config();
+
 var app = express();
 var { connectionCheck } = require("./dbConnection");
 
@@ -10,17 +11,28 @@ const {
 } = require("./middleware/middlewareToken");
 
 const { userRoute } = require("./routes/users");
-const { testRoute } = require("./routes/test");
-const publicRouteController = require("./routes/publicRoute");
-
+app.set("view engine", "ejs");
+app.set("views", `${__dirname}/views`);
+app.use(express.static("public"));
 app.use(cors());
 app.use(express.json());
+// access for Public
+app.use(
+  "/",
+  express.urlencoded({ extended: false }),
+  require("./routes/publicRoute")
+);
+// JWT Token Added
+app.use("/api", addHeaderAuth, TokenVerified, userRoute);
 
-app.use("/api", addHeaderAuth, TokenVerified, userRoute, testRoute);
-app.use("/", express.urlencoded({ extended: false }), publicRouteController);
-app.get("/", addHeaderAuth, TokenVerified, async function (req, res) {
+// Dowload file
+app.use(require("./routes/files"));
+app.use("/invoices", TokenVerified, require("./routes/invoice"));
+
+app.get("/", async function (req, res) {
   res.send("<h5>qweqwe</h5>");
 });
+// app.use(compress());
 
 const SetupPort = () =>
   app.listen(process.env.PORT, function () {

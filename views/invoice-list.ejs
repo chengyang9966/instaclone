@@ -1,0 +1,26 @@
+<%- include("header.ejs") %>
+
+<h1><a href="/invoices">Unpaid Invoices</a></h1>
+
+<% if (success) { %>
+<p class="success">
+  <strong>Success!</strong> The invoice has been sent to the client.
+</p>
+<%} else if(error) { %>
+<p class="error">
+  <strong>Whoops!</strong> Something went wrong and your invoice could not be
+  sent.
+</p>
+<%}else{ %>
+<div></div>
+<%} %> <% invoices.forEach(function(invoice) { %>
+<h3><%= invoice.customer %></h3>
+<p>
+  <%= invoice.id %> <br />
+  <a href="/invoices/<%= invoice.id %> ">View</a> |
+  <a href="/invoices/<%= invoice.id %>/email">Email Reminder</a>
+
+  <% }); %>
+</p>
+
+<%- include("footer.ejs") %>

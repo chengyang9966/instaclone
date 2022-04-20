@@ -1,4 +1,4 @@
-const tenplateString = require("./returnTemplateString");
+const { templateString } = require("./returnTemplateString");
 
 /**
  *
@@ -92,7 +92,7 @@ const getAllData = (param, { email, templateURL, roles } = templateData) => {
       break;
   }
 
-  let loginHTML = tenplateString(templateURL);
+  let loginHTML = templateString(templateURL);
   Object.entries(allData).map(([k, v], i) => {
     loginHTML = loginHTML.replace(new RegExp(k, "g"), v);
   });
