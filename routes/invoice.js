@@ -1,6 +1,6 @@
 const express = require("express"),
   router = express.Router();
-const invoices = require("../db.json");
+const invoices = [];
 
 const sendEmail = require("../utils/sendgridEmail");
 const { base64_encode } = require("../utils/base64EnCode");
