@@ -6,7 +6,10 @@ const { templateString } = require("./returnTemplateString");
  * @param templateData object consist data from template
  * @returns html template string
  */
-const getAllData = (param, { email, templateURL, roles } = templateData) => {
+const getAllData = (
+  param,
+  { email, templateURL, roles, respone_URL } = templateData
+) => {
   let allData = {
     "{{formAction}}": "/",
     "{{title}}": "Register",
@@ -21,6 +24,7 @@ const getAllData = (param, { email, templateURL, roles } = templateData) => {
     "{{btnRight}}": "Login",
     "{{showRole}}": "d-none",
     "{{roles}}": "",
+    "{{respone_URL}}": "",
   };
   let register_view_url =
       `${process.env.CLIENT_URL}:${process.env.PORT}/${process.env.REGISTER_VIEW_PATH}`.replace(
@@ -72,6 +76,7 @@ const getAllData = (param, { email, templateURL, roles } = templateData) => {
         "{{btnLeft}}": "register",
         "{{btnRightLink}}": login_url,
         "{{btnRight}}": "login",
+        "{{respone_URL}}": respone_URL,
       });
       break;
 

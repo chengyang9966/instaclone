@@ -2,7 +2,6 @@ const express = require("express");
 const { VerifyToken, CreateToken } = require("../middleware/token");
 const UserRepo = require("../repos/users");
 const router = express.Router();
-
 const { TokenVerified } = require("../middleware/middlewareToken");
 const { hashPassword, verifiedPassword } = require("../utils/password");
 const moment = require("moment");
@@ -10,6 +9,7 @@ const sendEmail = require("../utils/sendEmail");
 const { templateString } = require("../utils/returnTemplateString");
 const getAllData = require("../utils/templateDataForUser");
 const RoleRepo = require("../repos/roles");
+const { getUserSettings } = require("../repos/userSetting");
 
 router.post("/login", async function (req, res) {
   try {
@@ -17,6 +17,7 @@ router.post("/login", async function (req, res) {
       return res.status(404).send({ msg: "password is required" });
     }
     let user = await UserRepo.findBy({ email: req.body.email });
+    if (!user) return res.status(404).send({ msg: "Wrong Email Or Password" });
     const { id, password, salt } = user;
     if (user) {
       let newPassword = await verifiedPassword(
@@ -34,11 +35,17 @@ router.post("/login", async function (req, res) {
         delete user.password;
         delete user.salt;
         delete user.lastLogin;
-        return res.send({ ...user, msg: "User login success", login: true });
+
+        let token = CreateToken(user, process.env.REACT_APP_AUTH_PASSSWORD);
+
+        return res.redirect(req.body.respone_URL + "?token=" + token);
+
+        // return res.send({ ...user, msg: "User login success", login: true });
       }
       return res.status(404).send({ msg: "User fail to login", login: false });
     }
   } catch (error) {
+    console.log("🚀 ~ file: publicRoute.js ~ line 48 ~ error", error);
     res.status(404).send({ ...error, msg: "Failed Login" });
   }
 });
@@ -102,12 +109,19 @@ router.get("/userForgetPassword", async function (req, res) {
 });
 router.get("/userLogin", async function (req, res) {
   let emailText = "";
+  if (
+    req.query.AUTH_KEY &&
+    req.query.AUTH_KEY !== process.env.REACT_APP_AUTH_PASSSWORD
+  ) {
+    return res.redirect(req.body.failedURL);
+  }
   if (Object.keys(req.query).length) {
     emailText = req.query ? req.query.email : req.params ? req.params : "";
   }
   let loginHTML = getAllData("login", {
     email: emailText,
     templateURL: "template/userLogin.html",
+    respone_URL: req.query.successURL ? req.query.successURL : "",
   });
 
   res.writeHead(200, {
@@ -127,7 +141,7 @@ router.get("/userRegister", async function (req, res) {
   let loginHTML = getAllData("register", {
     email: emailText,
     templateURL: "template/userLogin.html",
-    roles: [...allRoles, { id: 2, roleName: "abcd" }],
+    roles: allRoles,
   });
 
   res.writeHead(200, {
@@ -164,7 +178,7 @@ router.get("/passwordReset", async function (req, res) {
 router.post("/passwordReset", TokenVerified, async function (req, res) {
   try {
     const { pasword, confirmpasword } = req.body;
-    const { id } = req.authData;
+    const { id } = res.locals.authData;
 
     if (!pasword || !confirmpasword) {
       return res.status(404).send({ msg: "Param is required " });
@@ -298,5 +312,31 @@ router.post("/forgetpassword", async function (req, res) {
     msg: `Send Email to ${user.username} successfully`,
   });
 });
+
+router.get(
+  "/foToken",
+  function (req, res, next) {
+    res.locals.AUTH_CODE = process.env.REACT_APP_AUTH_PASSSWORD;
+    next();
+  },
+  TokenVerified,
+  async function (req, res) {
+    try {
+      let { iat, exp, valid, ...authData } = res.locals.authData;
+      let refreshToken = CreateToken(
+        authData,
+        process.env.REACT_APP_AUTH_PASSSWORD
+      );
+      let result = await getUserSettings(authData.id);
+
+      res.send({
+        data: { ...authData, timezone: result.timezone },
+        refreshToken,
+      });
+    } catch (error) {
+      res.status(400).send(error);
+    }
+  }
+);
 
 module.exports = router;

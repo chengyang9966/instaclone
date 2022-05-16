@@ -11,10 +11,17 @@ const {
 } = require("./middleware/middlewareToken");
 
 const { userRoute } = require("./routes/users");
+const { msgRoute } = require("./routes/messages");
+const addPsswordHeader = require("./middleware/addPassword");
+const { userSettingRoute } = require("./routes/userSetting");
 app.set("view engine", "ejs");
 app.set("views", `${__dirname}/views`);
 app.use(express.static("public"));
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:3001", "http://localhost:8888"],
+  })
+);
 app.use(express.json());
 // access for Public
 app.use(
@@ -23,7 +30,14 @@ app.use(
   require("./routes/publicRoute")
 );
 // JWT Token Added
-app.use("/api", addHeaderAuth, TokenVerified, userRoute);
+app.use(
+  "/api",
+  addPsswordHeader,
+  TokenVerified,
+  userRoute,
+  msgRoute,
+  userSettingRoute
+);
 
 // Dowload file
 app.use(require("./routes/files"));
